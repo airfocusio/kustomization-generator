@@ -24,34 +24,34 @@ type HelmGenerator struct {
 	Values    map[string]interface{} `yaml:"values"`
 }
 
-func (g HelmGenerator) Generate(dir string) error {
+func (g HelmGenerator) Generate(dir string) (*Kustomization, error) {
 	url, err := retrieveHelmChartUrl(g.Registry, g.Chart, g.Version)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	valuesPath, err := ioutil.TempFile("", ".tmp-*-values.yaml")
+	valuesPath, err := ioutil.TempFile("", ".kustomization-generator-*-values.yaml")
 	if err != nil {
-		return fmt.Errorf("writing temporary values file failed: %v", err)
+		return nil, fmt.Errorf("writing temporary values file failed: %v", err)
 	}
 	defer os.Remove(valuesPath.Name())
 	valuesBytes, err := yaml.Marshal(g.Values)
 	if err != nil {
-		return fmt.Errorf("writing temporary values file failed: %v", err)
+		return nil, fmt.Errorf("writing temporary values file failed: %v", err)
 	}
 	err = os.WriteFile(valuesPath.Name(), valuesBytes, 0o600)
 	if err != nil {
-		return fmt.Errorf("writing temporary values file failed: %v", err)
+		return nil, fmt.Errorf("writing temporary values file failed: %v", err)
 	}
 
-	tempDir, err := ioutil.TempDir("", ".tmp-")
+	tempDir, err := ioutil.TempDir("", ".kustomization-generator-")
 	if err != nil {
-		return fmt.Errorf("preparing temporary folder failed: %v", err)
+		return nil, fmt.Errorf("preparing temporary folder failed: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
 	helmPath, err := exec.LookPath("helm")
 	if err != nil {
-		return fmt.Errorf("executing helm failed: executable not found")
+		return nil, fmt.Errorf("executing helm failed: executable not found")
 	}
 	helmArgs := []string{
 		"template",
@@ -64,10 +64,10 @@ func (g HelmGenerator) Generate(dir string) error {
 	helmArgs = append(helmArgs, g.Args...)
 	helmOutput, err := exec.Command(helmPath, helmArgs...).CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("executing helm failed: %v\n%s", err, string(helmOutput))
+		return nil, fmt.Errorf("executing helm failed: %v\n%s", err, string(helmOutput))
 	}
 
-	kustomization := kustomization{
+	kustomization := Kustomization{
 		Namespace: g.Namespace,
 	}
 	tempDir2 := path.Join(tempDir, g.Chart)
@@ -75,35 +75,22 @@ func (g HelmGenerator) Generate(dir string) error {
 	excludes := []regexp.Regexp{}
 	files, err := fileList(tempDir2, includes, excludes)
 	if err != nil {
-		return fmt.Errorf("listing helm generated resources failed: %v", err)
+		return nil, fmt.Errorf("listing helm generated resources failed: %v", err)
 	}
 	for _, file := range *files {
 		rel, err := filepath.Rel(tempDir2, file)
 		if err != nil {
-			return fmt.Errorf("listing helm generated resources failed: %v", err)
+			return nil, fmt.Errorf("listing helm generated resources failed: %v", err)
 		}
 		kustomization.Resources = append(kustomization.Resources, rel)
 	}
 
-	err = os.RemoveAll(path.Join(dir, "crds"))
-	if err != nil {
-		return fmt.Errorf("cleaning up target failed: %v", err)
-	}
-	err = os.RemoveAll(path.Join(dir, "templates"))
-	if err != nil {
-		return fmt.Errorf("cleaning up target failed: %v", err)
-	}
-
-	err = writeYamlFile(path.Join(tempDir2, "kustomization.yaml"), kustomization)
-	if err != nil {
-		return fmt.Errorf("writing kustomization failed: %v", err)
-	}
 	err = copyDir(tempDir2, dir)
 	if err != nil {
-		return fmt.Errorf("copying files to target failed: %v", err)
+		return nil, fmt.Errorf("copying files to target failed: %v", err)
 	}
 
-	return nil
+	return &kustomization, nil
 }
 
 type helmRegistryIndex struct {

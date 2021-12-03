@@ -23,10 +23,11 @@ This generator allows you to convert a hosted helm chart into locally stored res
     ```
     ├── kustomization-generator.yaml
     ├── kustomization.yaml
-    └── templates
-        ├── cainjector-deployment.yaml
-        ├── ...
-        └── webhook-validating-webhook.yaml
+    └── generated
+        └── crds
+            └── ...
+        └── templates
+            └── ...
     ```
 
 ## Usage kustomize
@@ -48,9 +49,13 @@ This generator allows you to convert a remote kustomization into a locally store
     ```
     ├── kustomization-generator.yaml
     ├── kustomization.yaml
-    └── resources.yaml
+    └── generated
+        └── resources.yaml
     ```
 
+## Usage download
+
+TODO
 
 ## Installation
 
