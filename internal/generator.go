@@ -22,6 +22,14 @@ func LoadGenerator(viperInst viper.Viper, path string) (*Generator, error) {
 	}
 
 	var result Generator
+	if t == "download" {
+		generator := DownloadGenerator{}
+		err = readYamlFile(path, &generator)
+		if err != nil {
+			return nil, err
+		}
+		result = generator
+	}
 	if t == "helm" {
 		generator := HelmGenerator{}
 		err = readYamlFile(path, &generator)

@@ -3,7 +3,10 @@
 MAIN := .
 TEST := ./internal
 
-run: run-helm run-kustomize
+run: run-download run-helm run-kustomize
+
+run-download:
+	go run $(MAIN) --dir=example/download
 
 run-helm:
 	go run $(MAIN) --dir=example/helm
