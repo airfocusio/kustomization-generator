@@ -1,0 +1,6 @@
+type: kustomize
+namespace: namespace
+url: github.com/owner/repo/kustomize?ref=main
+args:
+  - --reorder
+  - legacy

@@ -8,7 +8,7 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/choffmeister/kustomization-helm/internal"
+	"github.com/choffmeister/kustomization-generator/internal"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -22,7 +22,7 @@ func newRootCmd(version FullVersion) *rootCmd {
 	result := &rootCmd{}
 	cmd := &cobra.Command{
 		Version:      version.Version,
-		Use:          "kustomization-helm",
+		Use:          "kustomization-generator",
 		Short:        "An converter from helm charts to kustomizations",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -30,11 +30,11 @@ func newRootCmd(version FullVersion) *rootCmd {
 			if err != nil {
 				return fmt.Errorf("unable to initialize: %v", err)
 			}
-			config, err := internal.LoadConfig(*viperInstance, path.Join(*dir, "kustomization-helm.yaml"))
+			generator, err := internal.LoadGenerator(*viperInstance, path.Join(*dir, "kustomization-generator.yaml"))
 			if err != nil {
 				return fmt.Errorf("unable to load configuration: %v", err)
 			}
-			err = internal.Run(*dir, *config)
+			err = internal.Run(*dir, *generator)
 			if err != nil {
 				return fmt.Errorf("unable to run: %v", err)
 			}

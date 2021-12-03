@@ -3,8 +3,13 @@
 MAIN := .
 TEST := ./internal
 
-run:
-	go run $(MAIN) --dir=example
+run: run-helm run-kustomize
+
+run-helm:
+	go run $(MAIN) --dir=example/helm
+
+run-kustomize:
+	go run $(MAIN) --dir=example/kustomize
 
 test:
 	go test -v $(TEST)

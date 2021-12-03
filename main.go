@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/choffmeister/kustomization-helm/cmd"
+	"github.com/choffmeister/kustomization-generator/cmd"
 )
 
 // nolint: gochecknoglobals

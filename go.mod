@@ -1,4 +1,4 @@
-module github.com/choffmeister/kustomization-helm
+module github.com/choffmeister/kustomization-generator
 
 go 1.17
 

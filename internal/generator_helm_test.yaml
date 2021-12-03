@@ -1,3 +1,4 @@
+type: helm
 registry: https://charts.domain.com
 chart: chart
 version: 1.2.3
