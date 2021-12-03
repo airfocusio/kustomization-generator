@@ -1,0 +1,11 @@
+registry: https://charts.jetstack.io
+chart: cert-manager
+version: v1.6.1
+name: cert-manager
+namespace: cert-manager-system
+args:
+  - --set
+  - installCRDs=true
+values:
+  webhook:
+    timeoutSeconds: 4

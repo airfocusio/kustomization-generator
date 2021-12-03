@@ -1,0 +1,9 @@
+registry: https://charts.domain.com
+chart: chart
+version: 1.2.3
+name: name
+namespace: namespace
+args:
+  - --include-crds
+values:
+  foo: bar
