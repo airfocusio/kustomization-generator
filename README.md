@@ -11,11 +11,9 @@
     name: cert-manager
     namespace: cert-manager-system
     args:
-      - --set
-      - installCRDs=true
+      - --include-crds
     values:
-      webhook:
-        timeoutSeconds: 4
+      some: value
     ```
 2. Run `kustomization-helm` in that folder
 3. Find a ready to use kustomization with the content of that chart
