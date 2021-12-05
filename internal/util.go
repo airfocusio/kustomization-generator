@@ -2,10 +2,10 @@ package internal
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -102,11 +102,11 @@ func copyDir(src string, dst string) error {
 
 		if fd.IsDir() {
 			if err = copyDir(srcfp, dstfp); err != nil {
-				fmt.Println(err)
+				return err
 			}
 		} else {
 			if err = copyFile(srcfp, dstfp); err != nil {
-				fmt.Println(err)
+				return err
 			}
 		}
 	}
@@ -136,4 +136,13 @@ func copyFile(src string, dst string) error {
 		return err
 	}
 	return os.Chmod(dst, srcinfo.Mode())
+}
+
+func runCommand(cmd exec.Cmd) ([]byte, []byte, error) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	return stdout.Bytes(), stderr.Bytes(), err
 }

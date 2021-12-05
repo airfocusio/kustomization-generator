@@ -6,9 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
-	"path/filepath"
-	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -24,7 +21,7 @@ type HelmGenerator struct {
 	Values    map[string]interface{} `yaml:"values"`
 }
 
-func (g HelmGenerator) Generate(dir string) (*Kustomization, error) {
+func (g HelmGenerator) Generate() (*KustomizationWithEmbeddedResources, error) {
 	url, err := retrieveHelmChartUrl(g.Registry, g.Chart, g.Version)
 	if err != nil {
 		return nil, err
@@ -44,11 +41,6 @@ func (g HelmGenerator) Generate(dir string) (*Kustomization, error) {
 		return nil, fmt.Errorf("writing temporary values file failed: %v", err)
 	}
 
-	tempDir, err := ioutil.TempDir("", ".kustomization-generator-")
-	if err != nil {
-		return nil, fmt.Errorf("preparing temporary folder failed: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
 	helmPath, err := exec.LookPath("helm")
 	if err != nil {
 		return nil, fmt.Errorf("executing helm failed: executable not found")
@@ -58,39 +50,23 @@ func (g HelmGenerator) Generate(dir string) (*Kustomization, error) {
 		g.Name,
 		*url,
 		"--namespace", g.Namespace,
-		"--output-dir", tempDir,
 		"--values", valuesPath.Name(),
 	}
 	helmArgs = append(helmArgs, g.Args...)
-	helmOutput, err := exec.Command(helmPath, helmArgs...).CombinedOutput()
+	helmStdout, helmStderr, err := runCommand(*exec.Command(helmPath, helmArgs...))
 	if err != nil {
-		return nil, fmt.Errorf("executing helm failed: %v\n%s", err, string(helmOutput))
+		return nil, fmt.Errorf("executing helm failed: %v\n%s", err, string(helmStderr))
 	}
 
-	kustomization := Kustomization{
+	resources, err := splitCombinedKubernetesResources(helmStdout)
+	if err != nil {
+		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
+	}
+	result := KustomizationWithEmbeddedResources{
 		Namespace: g.Namespace,
+		Resources: *resources,
 	}
-	tempDir2 := path.Join(tempDir, g.Chart)
-	includes := []regexp.Regexp{*regexp.MustCompile(`\.ya?ml$`)}
-	excludes := []regexp.Regexp{}
-	files, err := fileList(tempDir2, includes, excludes)
-	if err != nil {
-		return nil, fmt.Errorf("listing helm generated resources failed: %v", err)
-	}
-	for _, file := range *files {
-		rel, err := filepath.Rel(tempDir2, file)
-		if err != nil {
-			return nil, fmt.Errorf("listing helm generated resources failed: %v", err)
-		}
-		kustomization.Resources = append(kustomization.Resources, rel)
-	}
-
-	err = copyDir(tempDir2, dir)
-	if err != nil {
-		return nil, fmt.Errorf("copying files to target failed: %v", err)
-	}
-
-	return &kustomization, nil
+	return &result, nil
 }
 
 type helmRegistryIndex struct {

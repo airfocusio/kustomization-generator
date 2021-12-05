@@ -8,31 +8,49 @@ import (
 )
 
 func Run(dir string, config Generator) error {
-	tempDir, err := ioutil.TempDir("", ".kustomization-generator-")
-	if err != nil {
-		return fmt.Errorf("preparing temporary folder failed: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
-
-	kustomization, err := config.Generate(tempDir)
+	kustomizationWithEmbeddedResources, err := config.Generate()
 	if err != nil {
 		return err
 	}
-	for i, res := range kustomization.Resources {
-		kustomization.Resources[i] = path.Join("generated", res)
+
+	cleanKustomization(dir)
+	err = writeKustomization(dir, *kustomizationWithEmbeddedResources)
+	if err != nil {
+		return err
 	}
-	err = writeYamlFile(path.Join(dir, "kustomization.yaml"), kustomization)
+
+	return nil
+}
+
+func cleanKustomization(dir string) {
+	os.RemoveAll(path.Join(dir, "generated"))
+	os.Remove(path.Join(dir, "kustomization.yaml"))
+}
+
+func writeKustomization(dir string, kustomization KustomizationWithEmbeddedResources) error {
+	kustomizationRaw := Kustomization{
+		Namespace: kustomization.Namespace,
+		Resources: []string{},
+	}
+	for name := range kustomization.Resources {
+		kustomizationRaw.Resources = append(kustomizationRaw.Resources, path.Join("generated", name))
+	}
+
+	err := writeYamlFile(path.Join(dir, "kustomization.yaml"), kustomizationRaw)
 	if err != nil {
 		return fmt.Errorf("writing kustomization failed: %v", err)
 	}
 
-	os.RemoveAll(path.Join(dir, "generated"))
-	if err != nil {
-		return fmt.Errorf("clearing generated files failed: %v", err)
-	}
-	err = copyDir(tempDir, path.Join(dir, "generated"))
-	if err != nil {
-		return fmt.Errorf("copying generated files failed: %v", err)
+	for resName, resBytes := range kustomization.Resources {
+		resPath := path.Join(dir, "generated", resName)
+		err := os.MkdirAll(path.Dir(resPath), 0o755)
+		if err != nil {
+			return fmt.Errorf("writing kustomization failed: %v", err)
+		}
+		err = ioutil.WriteFile(resPath, resBytes, 0o644)
+		if err != nil {
+			return fmt.Errorf("writing kustomization resource failed: %v", err)
+		}
 	}
 
 	return nil

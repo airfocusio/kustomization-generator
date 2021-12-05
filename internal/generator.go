@@ -12,8 +12,13 @@ type Kustomization struct {
 	Resources []string `yaml:"resources"`
 }
 
+type KustomizationWithEmbeddedResources struct {
+	Namespace string            `yaml:"namespace"`
+	Resources map[string][]byte `yaml:"resources"`
+}
+
 type Generator interface {
-	Generate(dir string) (*Kustomization, error)
+	Generate() (*KustomizationWithEmbeddedResources, error)
 }
 
 func LoadGenerator(viperInst viper.Viper, path string) (*Generator, error) {
@@ -62,4 +67,8 @@ func LoadGenerator(viperInst viper.Viper, path string) (*Generator, error) {
 		return nil, fmt.Errorf("config has unknown type %s", t)
 	}
 	return &result, nil
+}
+
+func splitCombinedKubernetesResources(bytes []byte) (*map[string][]byte, error) {
+	return &map[string][]byte{"resources.yaml": bytes}, nil
 }

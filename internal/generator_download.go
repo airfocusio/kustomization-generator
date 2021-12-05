@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"path"
 )
 
 type DownloadGenerator struct {
@@ -12,7 +11,7 @@ type DownloadGenerator struct {
 	Url       string `yaml:"url"`
 }
 
-func (g DownloadGenerator) Generate(dir string) (*Kustomization, error) {
+func (g DownloadGenerator) Generate() (*KustomizationWithEmbeddedResources, error) {
 	req, err := http.NewRequest("GET", g.Url, nil)
 	client := &http.Client{}
 	if err != nil {
@@ -29,14 +28,13 @@ func (g DownloadGenerator) Generate(dir string) (*Kustomization, error) {
 		return nil, fmt.Errorf("failed to download %s: %v", g.Url, err)
 	}
 
-	kustomization := Kustomization{
-		Namespace: g.Namespace,
-		Resources: []string{"resources.yaml"},
-	}
-	err = ioutil.WriteFile(path.Join(dir, "resources.yaml"), body, 0o644)
+	resources, err := splitCombinedKubernetesResources(body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
 	}
-
-	return &kustomization, nil
+	result := KustomizationWithEmbeddedResources{
+		Namespace: g.Namespace,
+		Resources: *resources,
+	}
+	return &result, nil
 }

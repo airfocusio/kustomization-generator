@@ -2,9 +2,7 @@ package internal
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os/exec"
-	"path"
 )
 
 type KustomizeGenerator struct {
@@ -13,7 +11,7 @@ type KustomizeGenerator struct {
 	Args      []string `yaml:"args"`
 }
 
-func (g KustomizeGenerator) Generate(dir string) (*Kustomization, error) {
+func (g KustomizeGenerator) Generate() (*KustomizationWithEmbeddedResources, error) {
 	kustomizePath, err := exec.LookPath("kustomize")
 	if err != nil {
 		return nil, fmt.Errorf("executing kustomize failed: executable not found")
@@ -23,19 +21,18 @@ func (g KustomizeGenerator) Generate(dir string) (*Kustomization, error) {
 		g.Url,
 	}
 	kustomizeArgs = append(kustomizeArgs, g.Args...)
-	kustomizeOutput, err := exec.Command(kustomizePath, kustomizeArgs...).CombinedOutput()
+	kustomizeStdout, kustomizeStderr, err := runCommand(*exec.Command(kustomizePath, kustomizeArgs...))
 	if err != nil {
-		return nil, fmt.Errorf("executing kustomize failed: %v\n%s", err, string(kustomizeOutput))
+		return nil, fmt.Errorf("executing kustomize failed: %v\n%s", err, string(kustomizeStderr))
 	}
 
-	kustomization := Kustomization{
+	resources, err := splitCombinedKubernetesResources(kustomizeStdout)
+	if err != nil {
+		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
+	}
+	result := KustomizationWithEmbeddedResources{
 		Namespace: g.Namespace,
-		Resources: []string{"resources.yaml"},
+		Resources: *resources,
 	}
-	err = ioutil.WriteFile(path.Join(dir, "resources.yaml"), kustomizeOutput, 0o644)
-	if err != nil {
-		return nil, err
-	}
-
-	return &kustomization, nil
+	return &result, nil
 }
