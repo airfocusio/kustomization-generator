@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"io/ioutil"
 
 	"github.com/spf13/viper"
 )
@@ -16,8 +17,13 @@ type Generator interface {
 }
 
 func LoadGenerator(viperInst viper.Viper, path string) (*Generator, error) {
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
 	var raw map[string]interface{}
-	err := readYamlFile(path, &raw)
+	err = readYaml(bytes, &raw)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +35,7 @@ func LoadGenerator(viperInst viper.Viper, path string) (*Generator, error) {
 	var result Generator
 	if t == "download" {
 		generator := DownloadGenerator{}
-		err = readYamlFile(path, &generator)
+		err = readYaml(bytes, &generator)
 		if err != nil {
 			return nil, err
 		}
@@ -37,7 +43,7 @@ func LoadGenerator(viperInst viper.Viper, path string) (*Generator, error) {
 	}
 	if t == "helm" {
 		generator := HelmGenerator{}
-		err = readYamlFile(path, &generator)
+		err = readYaml(bytes, &generator)
 		if err != nil {
 			return nil, err
 		}
@@ -45,7 +51,7 @@ func LoadGenerator(viperInst viper.Viper, path string) (*Generator, error) {
 	}
 	if t == "kustomize" {
 		generator := KustomizeGenerator{}
-		err = readYamlFile(path, &generator)
+		err = readYaml(bytes, &generator)
 		if err != nil {
 			return nil, err
 		}
