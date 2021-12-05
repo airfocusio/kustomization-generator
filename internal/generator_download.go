@@ -11,7 +11,7 @@ type DownloadGenerator struct {
 	Url       string `yaml:"url"`
 }
 
-func (g DownloadGenerator) Generate() (*KustomizationWithEmbeddedResources, error) {
+func (g DownloadGenerator) Generate() (*GeneratorResult, error) {
 	req, err := http.NewRequest("GET", g.Url, nil)
 	client := &http.Client{}
 	if err != nil {
@@ -32,7 +32,7 @@ func (g DownloadGenerator) Generate() (*KustomizationWithEmbeddedResources, erro
 	if err != nil {
 		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
 	}
-	result := KustomizationWithEmbeddedResources{
+	result := GeneratorResult{
 		Namespace: g.Namespace,
 		Resources: resources,
 	}

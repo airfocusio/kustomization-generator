@@ -15,18 +15,20 @@ type Kustomization struct {
 	Resources []string `yaml:"resources"`
 }
 
-type KustomizationResource struct {
-	Name    string
-	Content string
+type GeneratorResource struct {
+	ApiVersion string
+	Kind       string
+	File       string
+	Content    string
 }
 
-type KustomizationWithEmbeddedResources struct {
+type GeneratorResult struct {
 	Namespace string
-	Resources []KustomizationResource
+	Resources []GeneratorResource
 }
 
 type Generator interface {
-	Generate() (*KustomizationWithEmbeddedResources, error)
+	Generate() (*GeneratorResult, error)
 }
 
 type KubernetesResourceMetadata struct {
@@ -37,6 +39,10 @@ type KubernetesResource struct {
 	ApiVersion string                     `yaml:"apiVersion"`
 	Kind       string                     `yaml:"kind"`
 	Metadata   KubernetesResourceMetadata `yaml:"metadata"`
+}
+
+func (r KubernetesResource) NonEmpty() bool {
+	return r.ApiVersion != "" && r.Kind != "" && r.Metadata.Name != ""
 }
 
 func LoadGenerator(viperInst viper.Viper, path string) (*Generator, error) {
@@ -87,7 +93,7 @@ func LoadGenerator(viperInst viper.Viper, path string) (*Generator, error) {
 	return &result, nil
 }
 
-func splitCombinedKubernetesResources(all string) ([]KustomizationResource, error) {
+func splitCombinedKubernetesResources(all string) ([]GeneratorResource, error) {
 	newLine := "\n"
 	seperator := "---"
 
@@ -95,7 +101,7 @@ func splitCombinedKubernetesResources(all string) ([]KustomizationResource, erro
 	for i := range allLines {
 		allLines[i] = strings.TrimRight(allLines[i], " \t")
 	}
-	result := []KustomizationResource{}
+	result := []GeneratorResource{}
 	existingNames := map[string]int{}
 
 	start := 0
@@ -122,14 +128,17 @@ func splitCombinedKubernetesResources(all string) ([]KustomizationResource, erro
 			if err != nil {
 				return result, err
 			}
-			nameBase := strings.Trim(fmt.Sprintf("%s-%s", kubernetesResource.Metadata.Name, kubernetesResource.Kind), "-")
-			if nameBase == "" {
+			if !kubernetesResource.NonEmpty() {
 				continue
 			}
+
+			nameBase := strings.Trim(fmt.Sprintf("%s-%s", kubernetesResource.Metadata.Name, kubernetesResource.Kind), "-")
 			name := getUniqueKubernetesResourceFileName(nameBase, &existingNames)
-			result = append(result, KustomizationResource{
-				Name:    name + ".yaml",
-				Content: content,
+			result = append(result, GeneratorResource{
+				ApiVersion: kubernetesResource.ApiVersion,
+				Kind:       kubernetesResource.Kind,
+				File:       name + ".yaml",
+				Content:    content,
 			})
 		}
 	}

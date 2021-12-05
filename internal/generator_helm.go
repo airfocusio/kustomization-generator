@@ -21,7 +21,7 @@ type HelmGenerator struct {
 	Values    map[string]interface{} `yaml:"values"`
 }
 
-func (g HelmGenerator) Generate() (*KustomizationWithEmbeddedResources, error) {
+func (g HelmGenerator) Generate() (*GeneratorResult, error) {
 	url, err := retrieveHelmChartUrl(g.Registry, g.Chart, g.Version)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (g HelmGenerator) Generate() (*KustomizationWithEmbeddedResources, error) {
 	if err != nil {
 		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
 	}
-	result := KustomizationWithEmbeddedResources{
+	result := GeneratorResult{
 		Namespace: g.Namespace,
 		Resources: resources,
 	}

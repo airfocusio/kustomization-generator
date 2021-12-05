@@ -11,7 +11,7 @@ type KustomizeGenerator struct {
 	Args      []string `yaml:"args"`
 }
 
-func (g KustomizeGenerator) Generate() (*KustomizationWithEmbeddedResources, error) {
+func (g KustomizeGenerator) Generate() (*GeneratorResult, error) {
 	kustomizePath, err := exec.LookPath("kustomize")
 	if err != nil {
 		return nil, fmt.Errorf("executing kustomize failed: executable not found")
@@ -30,7 +30,7 @@ func (g KustomizeGenerator) Generate() (*KustomizationWithEmbeddedResources, err
 	if err != nil {
 		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
 	}
-	result := KustomizationWithEmbeddedResources{
+	result := GeneratorResult{
 		Namespace: g.Namespace,
 		Resources: resources,
 	}

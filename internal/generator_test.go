@@ -11,93 +11,107 @@ func TestSplitCombinedKubernetesResources1(t *testing.T) {
 	testCases := []struct {
 		name   string
 		input  string
-		output []KustomizationResource
+		output []GeneratorResource
 	}{
 		{
 			name:   "empty-1",
 			input:  "",
-			output: []KustomizationResource{},
+			output: []GeneratorResource{},
 		},
 		{
 			name:   "empty-2",
 			input:  "\n",
-			output: []KustomizationResource{},
+			output: []GeneratorResource{},
 		},
 		{
 			name:   "empty-3",
 			input:  "---",
-			output: []KustomizationResource{},
+			output: []GeneratorResource{},
 		},
 		{
 			name:   "empty-4",
 			input:  "---\n",
-			output: []KustomizationResource{},
+			output: []GeneratorResource{},
 		},
 		{
 			name:   "empty-5",
 			input:  "\n---\n",
-			output: []KustomizationResource{},
+			output: []GeneratorResource{},
 		},
 		{
 			name:  "single",
 			input: mockResource("Secret", "database"),
-			output: []KustomizationResource{
+			output: []GeneratorResource{
 				{
-					Name:    "database-secret.yaml",
-					Content: mockResource("Secret", "database"),
+					ApiVersion: "v1",
+					Kind:       "Secret",
+					File:       "database-secret.yaml",
+					Content:    mockResource("Secret", "database"),
 				},
 			},
 		},
 		{
 			name:  "multiple",
 			input: mockResource("Secret", "database") + "---\n" + mockResource("Secret", "other"),
-			output: []KustomizationResource{
+			output: []GeneratorResource{
 				{
-					Name:    "database-secret.yaml",
-					Content: mockResource("Secret", "database"),
+					ApiVersion: "v1",
+					Kind:       "Secret",
+					File:       "database-secret.yaml",
+					Content:    mockResource("Secret", "database"),
 				},
 				{
-					Name:    "other-secret.yaml",
-					Content: mockResource("Secret", "other"),
+					ApiVersion: "v1",
+					Kind:       "Secret",
+					File:       "other-secret.yaml",
+					Content:    mockResource("Secret", "other"),
 				},
 			},
 		},
 		{
 			name:  "name-collision",
 			input: mockResource("Secret", "database") + "---\n" + mockResource("Secret", "database"),
-			output: []KustomizationResource{
+			output: []GeneratorResource{
 				{
-					Name:    "database-secret.yaml",
-					Content: mockResource("Secret", "database"),
+					ApiVersion: "v1",
+					Kind:       "Secret",
+					File:       "database-secret.yaml",
+					Content:    mockResource("Secret", "database"),
 				},
 				{
-					Name:    "database-secret-1.yaml",
-					Content: mockResource("Secret", "database"),
+					ApiVersion: "v1",
+					Kind:       "Secret",
+					File:       "database-secret-1.yaml",
+					Content:    mockResource("Secret", "database"),
 				},
 			},
 		},
 		{
 			name:   "comment-isolated",
 			input:  "# foobar\n\n---\n",
-			output: []KustomizationResource{},
+			output: []GeneratorResource{},
 		},
 		{
 			name:  "comment-before",
 			input: "# foobar\n\n---\n" + mockResource("Secret", "database"),
-			output: []KustomizationResource{
+			output: []GeneratorResource{
 				{
-					Name:    "database-secret.yaml",
-					Content: "# foobar\n\n" + mockResource("Secret", "database"),
+					ApiVersion: "v1",
+					Kind:       "Secret",
+					File:       "database-secret.yaml",
+					Content:    "# foobar\n\n" + mockResource("Secret", "database"),
 				},
 			},
 		},
 		{
 			name:  "comment-after",
 			input: mockResource("Secret", "database") + "---\n# foobar\n\n",
-			output: []KustomizationResource{
+			output: []GeneratorResource{
 				{
-					Name:    "database-secret.yaml",
-					Content: mockResource("Secret", "database"),
+					ApiVersion: "v1",
+					Kind:       "Secret",
+					File:       "database-secret.yaml",
+					Content:    mockResource("Secret", "database"),
 				},
 			},
 		},
