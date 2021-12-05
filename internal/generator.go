@@ -6,7 +6,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/spf13/viper"
 	"gopkg.in/yaml.v3"
 )
 
@@ -45,8 +44,8 @@ func (r KubernetesResource) NonEmpty() bool {
 	return r.ApiVersion != "" && r.Kind != "" && r.Metadata.Name != ""
 }
 
-func LoadGenerator(viperInst viper.Viper, path string) (*Generator, error) {
-	bytes, err := ioutil.ReadFile(path)
+func LoadGenerator(file string) (*Generator, error) {
+	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

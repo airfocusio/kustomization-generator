@@ -7,14 +7,22 @@ import (
 	"path"
 )
 
-func Run(dir string, config Generator) error {
-	kustomizationWithEmbeddedResources, err := config.Generate()
+const configFile = "kustomization-generator.yaml"
+
+func Run(dir string) error {
+	file := path.Join(dir, configFile)
+	generator, err := LoadGenerator(file)
+	if err != nil {
+		return fmt.Errorf("unable to load configuration: %v", err)
+	}
+
+	kustomizationWithEmbeddedResources, err := (*generator).Generate()
 	if err != nil {
 		return err
 	}
 
-	cleanKustomization(dir)
-	err = writeKustomization(dir, *kustomizationWithEmbeddedResources)
+	clear(dir)
+	err = write(dir, *kustomizationWithEmbeddedResources)
 	if err != nil {
 		return err
 	}
@@ -22,11 +30,26 @@ func Run(dir string, config Generator) error {
 	return nil
 }
 
-func cleanKustomization(dir string) {
-	os.RemoveAll(path.Join(dir, "generated"))
+func clear(dir string) {
+	fds, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, fd := range fds {
+		if fd.Name() == configFile {
+			continue
+		}
+
+		fp := path.Join(dir, fd.Name())
+		if fd.IsDir() {
+			os.RemoveAll(fp)
+		} else {
+			os.Remove(fp)
+		}
+	}
 }
 
-func writeKustomization(dir string, result GeneratorResult) error {
+func write(dir string, result GeneratorResult) error {
 	buckets := []struct {
 		name          string
 		filter        func(resource GeneratorResource) bool
@@ -60,7 +83,7 @@ func writeKustomization(dir string, result GeneratorResult) error {
 	for i := range buckets {
 		bucket := &buckets[i]
 		bucket.kustomization.Namespace = result.Namespace
-		bucket.dir = path.Join(dir, "generated", bucket.name)
+		bucket.dir = path.Join(dir, bucket.name)
 		err := os.MkdirAll(bucket.dir, 0o755)
 		if err != nil {
 			return fmt.Errorf("writing kustomization failed: %v", err)
@@ -93,11 +116,11 @@ func writeKustomization(dir string, result GeneratorResult) error {
 		}
 	}
 
-	err := os.MkdirAll(path.Join(dir, "generated"), 0o755)
+	err := os.MkdirAll(dir, 0o755)
 	if err != nil {
 		return fmt.Errorf("writing kustomization failed: %v", err)
 	}
-	err = writeYamlFile(path.Join(dir, "generated", "kustomization.yaml"), kustomization)
+	err = writeYamlFile(path.Join(dir, "kustomization.yaml"), kustomization)
 	if err != nil {
 		return fmt.Errorf("writing kustomization failed: %v", err)
 	}
