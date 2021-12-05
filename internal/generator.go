@@ -100,13 +100,22 @@ func splitCombinedKubernetesResources(all string) ([]KustomizationResource, erro
 
 	start := 0
 	for i, line := range allLines {
-		if strings.HasPrefix(line, seperator) {
-			content := strings.Trim(strings.Join(allLines[start:i], newLine), "\n \t") + newLine
-			start = i + 1
-
-			if content == "\n" {
-				continue
+		empty := true
+		for j := start; j < i; j++ {
+			if allLines[j] != "---" && allLines[j] != "" && !strings.HasPrefix(strings.TrimLeft(allLines[j], " \t"), "#") {
+				empty = false
+				break
 			}
+		}
+		if !empty && strings.HasPrefix(line, seperator) {
+			lines := []string{}
+			for _, line := range allLines[start:i] {
+				if line != seperator {
+					lines = append(lines, line)
+				}
+			}
+			content := strings.Trim(strings.Join(lines, newLine), "\n \t") + newLine
+			start = i + 1
 
 			kubernetesResource := KubernetesResource{}
 			err := yaml.Unmarshal([]byte(content), &kubernetesResource)
@@ -115,7 +124,7 @@ func splitCombinedKubernetesResources(all string) ([]KustomizationResource, erro
 			}
 			nameBase := strings.Trim(fmt.Sprintf("%s-%s", kubernetesResource.Metadata.Name, kubernetesResource.Kind), "-")
 			if nameBase == "" {
-				nameBase = "unnamed"
+				continue
 			}
 			name := getUniqueKubernetesResourceFileName(nameBase, &existingNames)
 			result = append(result, KustomizationResource{

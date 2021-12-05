@@ -1,127 +1,113 @@
 package internal
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSplitCombinedKubernetesResources(t *testing.T) {
-	var str string
-	var err error
-	var actual []KustomizationResource
-
-	str = `
-apiVersion: v1
-kind: Secret
-metadata:
-  name: database
-stringData:
-  password: secure
-`
-	actual, err = splitCombinedKubernetesResources(str)
-	if assert.NoError(t, err) {
-		expected := []KustomizationResource{
-			{
-				Name: "database-secret.yaml",
-				Content: `apiVersion: v1
-kind: Secret
-metadata:
-  name: database
-stringData:
-  password: secure
-`,
+func TestSplitCombinedKubernetesResources1(t *testing.T) {
+	testCases := []struct {
+		name   string
+		input  string
+		output []KustomizationResource
+	}{
+		{
+			name:   "empty-1",
+			input:  "",
+			output: []KustomizationResource{},
+		},
+		{
+			name:   "empty-2",
+			input:  "\n",
+			output: []KustomizationResource{},
+		},
+		{
+			name:   "empty-3",
+			input:  "---",
+			output: []KustomizationResource{},
+		},
+		{
+			name:   "empty-4",
+			input:  "---\n",
+			output: []KustomizationResource{},
+		},
+		{
+			name:   "empty-5",
+			input:  "\n---\n",
+			output: []KustomizationResource{},
+		},
+		{
+			name:  "single",
+			input: mockResource("Secret", "database"),
+			output: []KustomizationResource{
+				{
+					Name:    "database-secret.yaml",
+					Content: mockResource("Secret", "database"),
+				},
 			},
-		}
-		assert.Equal(t, expected, actual)
+		},
+		{
+			name:  "multiple",
+			input: mockResource("Secret", "database") + "---\n" + mockResource("Secret", "other"),
+			output: []KustomizationResource{
+				{
+					Name:    "database-secret.yaml",
+					Content: mockResource("Secret", "database"),
+				},
+				{
+					Name:    "other-secret.yaml",
+					Content: mockResource("Secret", "other"),
+				},
+			},
+		},
+		{
+			name:  "name-collision",
+			input: mockResource("Secret", "database") + "---\n" + mockResource("Secret", "database"),
+			output: []KustomizationResource{
+				{
+					Name:    "database-secret.yaml",
+					Content: mockResource("Secret", "database"),
+				},
+				{
+					Name:    "database-secret-1.yaml",
+					Content: mockResource("Secret", "database"),
+				},
+			},
+		},
+		{
+			name:   "comment-isolated",
+			input:  "# foobar\n\n---\n",
+			output: []KustomizationResource{},
+		},
+		{
+			name:  "comment-before",
+			input: "# foobar\n\n---\n" + mockResource("Secret", "database"),
+			output: []KustomizationResource{
+				{
+					Name:    "database-secret.yaml",
+					Content: "# foobar\n\n" + mockResource("Secret", "database"),
+				},
+			},
+		},
+		{
+			name:  "comment-after",
+			input: mockResource("Secret", "database") + "---\n# foobar\n\n",
+			output: []KustomizationResource{
+				{
+					Name:    "database-secret.yaml",
+					Content: mockResource("Secret", "database"),
+				},
+			},
+		},
 	}
 
-	str = `
-apiVersion: v1
-kind: Secret
-metadata:
-  name: database
-stringData:
-  password: secure
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: other
-stringData:
-  password: secure
-`
-	actual, err = splitCombinedKubernetesResources(str)
-	if assert.NoError(t, err) {
-		expected := []KustomizationResource{
-			{
-				Name: "database-secret.yaml",
-				Content: `apiVersion: v1
-kind: Secret
-metadata:
-  name: database
-stringData:
-  password: secure
-`,
-			},
-			{
-				Name: "other-secret.yaml",
-				Content: `apiVersion: v1
-kind: Secret
-metadata:
-  name: other
-stringData:
-  password: secure
-`,
-			},
+	for _, testCase := range testCases {
+		actual, err := splitCombinedKubernetesResources(testCase.input)
+		if assert.NoError(t, err, "Case %s", testCase.name) {
+			assert.Equal(t, testCase.output, actual, "Case %s", testCase.name)
 		}
-		assert.Equal(t, expected, actual)
-	}
-
-	str = `
-apiVersion: v1
-kind: Secret
-metadata:
-  name: database
-stringData:
-  password: secure
-
----
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: database
-stringData:
-  password: secure
-`
-	actual, err = splitCombinedKubernetesResources(str)
-	if assert.NoError(t, err) {
-		expected := []KustomizationResource{
-			{
-				Name: "database-secret.yaml",
-				Content: `apiVersion: v1
-kind: Secret
-metadata:
-  name: database
-stringData:
-  password: secure
-`,
-			},
-			{
-				Name: "database-secret-1.yaml",
-				Content: `apiVersion: v1
-kind: Secret
-metadata:
-  name: database
-stringData:
-  password: secure
-`,
-			},
-		}
-		assert.Equal(t, expected, actual)
 	}
 }
 
@@ -135,4 +121,12 @@ func TestGetUniqueKubernetesResourceFileName(t *testing.T) {
 	assert.Equal(t, "bar-1", getUniqueKubernetesResourceFileName("bar-1", &state))
 	assert.Equal(t, "bar-1-1", getUniqueKubernetesResourceFileName("bar", &state))
 	assert.Equal(t, "bar-2", getUniqueKubernetesResourceFileName("bar", &state))
+}
+
+func mockResource(kind string, name string) string {
+	return fmt.Sprintf(`apiVersion: v1
+kind: %s
+metadata:
+  name: %s
+`, kind, name)
 }
