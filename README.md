@@ -24,15 +24,13 @@ This generator allows you to convert a hosted helm chart into locally stored res
     ├── kustomization-generator.yaml
     ├── kustomization.yaml
     └── generated
-        └── crds
-            └── ...
-        └── templates
-            └── ...
+        ├── cert-manager-cainjector-clusterrole.yaml
+        └── ...
     ```
 
 ## Usage kustomize
 
-This generator allows you to convert a remote kustomization into a locally stored resource definition.
+This generator allows you to convert a remote kustomization into a locally stored resource definitions.
 
 1. Prepare folder with definition:
     ```yaml
@@ -50,12 +48,30 @@ This generator allows you to convert a remote kustomization into a locally store
     ├── kustomization-generator.yaml
     ├── kustomization.yaml
     └── generated
-        └── resources.yaml
+        ├── pgo-deployment.yaml
+        └── ...
     ```
 
 ## Usage download
 
-TODO
+This generator allows you to convert a remote resource file into a locally stored resource definitions.
+
+1. Prepare folder with definition:
+    ```yaml
+    # kustomization-generator.yaml
+    type: download
+    namespace: longhorn-system
+    url: https://raw.githubusercontent.com/longhorn/longhorn/v1.2.2/deploy/longhorn.yaml
+    ```
+2. Run `kustomization-generator` in that folder
+3. Find a ready to use kustomization with the content of that chart
+    ```
+    ├── kustomization-generator.yaml
+    ├── kustomization.yaml
+    └── generated
+        ├── backingimagedatasources-longhorn-io-customresourcedefinition.yaml
+        └── ...
+    ```
 
 ## Installation
 
