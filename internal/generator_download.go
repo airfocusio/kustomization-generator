@@ -28,13 +28,13 @@ func (g DownloadGenerator) Generate() (*KustomizationWithEmbeddedResources, erro
 		return nil, fmt.Errorf("failed to download %s: %v", g.Url, err)
 	}
 
-	resources, err := splitCombinedKubernetesResources(body)
+	resources, err := splitCombinedKubernetesResources(string(body))
 	if err != nil {
 		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
 	}
 	result := KustomizationWithEmbeddedResources{
 		Namespace: g.Namespace,
-		Resources: *resources,
+		Resources: resources,
 	}
 	return &result, nil
 }

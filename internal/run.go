@@ -32,8 +32,8 @@ func writeKustomization(dir string, kustomization KustomizationWithEmbeddedResou
 		Namespace: kustomization.Namespace,
 		Resources: []string{},
 	}
-	for name := range kustomization.Resources {
-		kustomizationRaw.Resources = append(kustomizationRaw.Resources, path.Join("generated", name))
+	for _, resource := range kustomization.Resources {
+		kustomizationRaw.Resources = append(kustomizationRaw.Resources, path.Join("generated", resource.Name))
 	}
 
 	err := writeYamlFile(path.Join(dir, "kustomization.yaml"), kustomizationRaw)
@@ -41,13 +41,13 @@ func writeKustomization(dir string, kustomization KustomizationWithEmbeddedResou
 		return fmt.Errorf("writing kustomization failed: %v", err)
 	}
 
-	for resName, resBytes := range kustomization.Resources {
-		resPath := path.Join(dir, "generated", resName)
+	for _, resource := range kustomization.Resources {
+		resPath := path.Join(dir, "generated", resource.Name)
 		err := os.MkdirAll(path.Dir(resPath), 0o755)
 		if err != nil {
 			return fmt.Errorf("writing kustomization failed: %v", err)
 		}
-		err = ioutil.WriteFile(resPath, resBytes, 0o644)
+		err = ioutil.WriteFile(resPath, []byte(resource.Content), 0o644)
 		if err != nil {
 			return fmt.Errorf("writing kustomization resource failed: %v", err)
 		}

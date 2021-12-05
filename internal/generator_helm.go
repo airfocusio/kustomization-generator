@@ -58,13 +58,13 @@ func (g HelmGenerator) Generate() (*KustomizationWithEmbeddedResources, error) {
 		return nil, fmt.Errorf("executing helm failed: %v\n%s", err, string(helmStderr))
 	}
 
-	resources, err := splitCombinedKubernetesResources(helmStdout)
+	resources, err := splitCombinedKubernetesResources(string(helmStdout))
 	if err != nil {
 		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
 	}
 	result := KustomizationWithEmbeddedResources{
 		Namespace: g.Namespace,
-		Resources: *resources,
+		Resources: resources,
 	}
 	return &result, nil
 }

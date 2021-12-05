@@ -26,13 +26,13 @@ func (g KustomizeGenerator) Generate() (*KustomizationWithEmbeddedResources, err
 		return nil, fmt.Errorf("executing kustomize failed: %v\n%s", err, string(kustomizeStderr))
 	}
 
-	resources, err := splitCombinedKubernetesResources(kustomizeStdout)
+	resources, err := splitCombinedKubernetesResources(string(kustomizeStdout))
 	if err != nil {
 		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
 	}
 	result := KustomizationWithEmbeddedResources{
 		Namespace: g.Namespace,
-		Resources: *resources,
+		Resources: resources,
 	}
 	return &result, nil
 }
