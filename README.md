@@ -48,7 +48,6 @@ This generator allows you to convert a remote kustomization into a locally store
 ```yaml
 # kustomization-generator.yaml
 type: kustomize
-namespace: namespace
 url: github.com/CrunchyData/postgres-operator-examples/kustomize/install?ref=main
 args:
   - --reorder
@@ -60,7 +59,6 @@ args:
 ```yaml
 # kustomization-generator.yaml
 type: download
-namespace: longhorn-system
 url: https://raw.githubusercontent.com/longhorn/longhorn/v1.2.2/deploy/longhorn.yaml
 ```
 

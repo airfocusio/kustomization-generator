@@ -76,13 +76,10 @@ func write(dir string, result GeneratorResult) error {
 		},
 	}
 
-	kustomization := Kustomization{
-		Namespace: result.Namespace,
-	}
+	kustomization := Kustomization{}
 
 	for i := range buckets {
 		bucket := &buckets[i]
-		bucket.kustomization.Namespace = result.Namespace
 		bucket.dir = path.Join(dir, bucket.name)
 		err := os.MkdirAll(bucket.dir, 0o755)
 		if err != nil {
@@ -106,7 +103,6 @@ func write(dir string, result GeneratorResult) error {
 	}
 
 	for _, bucket := range buckets {
-		bucket.kustomization.Namespace = result.Namespace
 		if len(bucket.kustomization.Resources) > 0 {
 			kustomization.Resources = append(kustomization.Resources, bucket.name)
 			err := writeYamlFile(path.Join(bucket.dir, "kustomization.yaml"), bucket.kustomization)

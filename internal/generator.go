@@ -10,7 +10,6 @@ import (
 )
 
 type Kustomization struct {
-	Namespace string   `yaml:"namespace"`
 	Resources []string `yaml:"resources"`
 }
 
@@ -22,7 +21,6 @@ type GeneratorResource struct {
 }
 
 type GeneratorResult struct {
-	Namespace string
 	Resources []GeneratorResource
 }
 

@@ -7,8 +7,7 @@ import (
 )
 
 type DownloadGenerator struct {
-	Namespace string `yaml:"namespace"`
-	Url       string `yaml:"url"`
+	Url string `yaml:"url"`
 }
 
 func (g DownloadGenerator) Generate() (*GeneratorResult, error) {
@@ -33,7 +32,6 @@ func (g DownloadGenerator) Generate() (*GeneratorResult, error) {
 		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
 	}
 	result := GeneratorResult{
-		Namespace: g.Namespace,
 		Resources: resources,
 	}
 	return &result, nil

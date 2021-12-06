@@ -6,9 +6,8 @@ import (
 )
 
 type KustomizeGenerator struct {
-	Namespace string   `yaml:"namespace"`
-	Url       string   `yaml:"url"`
-	Args      []string `yaml:"args"`
+	Url  string   `yaml:"url"`
+	Args []string `yaml:"args"`
 }
 
 func (g KustomizeGenerator) Generate() (*GeneratorResult, error) {
@@ -31,7 +30,6 @@ func (g KustomizeGenerator) Generate() (*GeneratorResult, error) {
 		return nil, fmt.Errorf("splitting helm resources failed: %v", err)
 	}
 	result := GeneratorResult{
-		Namespace: g.Namespace,
 		Resources: resources,
 	}
 	return &result, nil

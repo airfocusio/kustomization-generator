@@ -1,6 +1,5 @@
 
 type: kustomize
-namespace: namespace
 url: github.com/CrunchyData/postgres-operator-examples/kustomize/install?ref=main
 args:
   - --reorder
