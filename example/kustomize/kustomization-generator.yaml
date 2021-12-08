@@ -1,4 +1,3 @@
-
 type: kustomize
 url: github.com/CrunchyData/postgres-operator-examples/kustomize/install?ref=main
 args:

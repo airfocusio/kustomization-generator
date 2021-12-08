@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/airfocusio/go-expandenv"
 	"gopkg.in/yaml.v3"
 )
 
@@ -43,7 +44,21 @@ func (r KubernetesResource) NonEmpty() bool {
 }
 
 func LoadGenerator(file string) (*Generator, error) {
-	bytes, err := ioutil.ReadFile(file)
+	bytesRaw, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	var expansionTemp interface{}
+	err = yaml.Unmarshal(bytesRaw, &expansionTemp)
+	if err != nil {
+		return nil, err
+	}
+	expansionTemp, err = expandenv.ExpandEnv(expansionTemp)
+	if err != nil {
+		return nil, err
+	}
+	bytes, err := yaml.Marshal(expansionTemp)
 	if err != nil {
 		return nil, err
 	}
