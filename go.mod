@@ -1,4 +1,4 @@
-module github.com/choffmeister/kustomization-generator
+module github.com/airfocusio/kustomization-generator
 
 go 1.17
 

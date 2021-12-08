@@ -68,6 +68,6 @@ url: https://raw.githubusercontent.com/longhorn/longhorn/v1.2.2/deploy/longhorn.
 
 ```bash
 cd my-git-directory
-docker pull ghcr.io/choffmeister/kustomization-generator:latest
-docker run --rm -v $PWD:/workdir ghcr.io/choffmeister/kustomization-generator:latest
+docker pull ghcr.io/airfocusio/kustomization-generator:latest
+docker run --rm -v $PWD:/workdir ghcr.io/airfocusio/kustomization-generator:latest
 ```

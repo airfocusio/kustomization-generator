@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/choffmeister/kustomization-generator/internal"
+	"github.com/airfocusio/kustomization-generator/internal"
 	"github.com/spf13/cobra"
 )
 
