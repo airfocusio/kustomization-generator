@@ -1,0 +1,25 @@
+name: 'Kustomization Generator setup'
+description: ''
+inputs:
+  version:
+    description: 'version'
+    default: 'latest'
+runs:
+  using: 'composite'
+  steps:
+    - if: inputs.version == 'latest'
+      run: |
+        cd /tmp
+        URL=$(curl -fsSL https://api.github.com/repos/airfocusio/kustomization-generator/releases/${{ inputs.version }} | jq -r '.assets[] | select(.name|test("linux_amd64\\.tar\\.gz$")) | .browser_download_url')
+        curl -fsSL "$URL" | tar xz
+        mv kustomization-generator /usr/local/bin
+        kustomization-generator --version
+      shell: bash
+    - if: inputs.version != 'latest'
+      run: |
+        cd /tmp
+        URL=$(curl -fsSL https://api.github.com/repos/airfocusio/kustomization-generator/releases/tags/${{ inputs.version }} | jq -r '.assets[] | select(.name|test("linux_amd64\\.tar\\.gz$")) | .browser_download_url')
+        curl -fsSL "$URL" | tar xz
+        mv kustomization-generator /usr/local/bin
+        kustomization-generator --version
+      shell: bash

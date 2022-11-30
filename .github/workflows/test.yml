@@ -12,8 +12,20 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
         go-version: 1.17.x
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: make test
+  test-action:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: airfocusio/kustomization-generator/setup@main
+    - name: Verify
+      run: kustomization-generator --version
+    - uses: airfocusio/kustomization-generator/setup@main
+      with:
+        version: v0.1.0-beta.1
+    - name: Verify
+      run: kustomization-generator --version
