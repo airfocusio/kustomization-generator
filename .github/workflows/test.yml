@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/setup-go@v3
       with:
-        go-version: 1.17.x
+        go-version: 1.19.x
     - uses: actions/checkout@v3
     - run: make test
   test-action:
@@ -26,6 +26,6 @@ jobs:
       run: kustomization-generator --version
     - uses: airfocusio/kustomization-generator/setup@main
       with:
-        version: v0.1.0-beta.1
+        version: v0.1.0
     - name: Verify
       run: kustomization-generator --version

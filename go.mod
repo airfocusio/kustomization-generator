@@ -1,6 +1,6 @@
 module github.com/airfocusio/kustomization-generator
 
-go 1.17
+go 1.19
 
 require (
 	github.com/airfocusio/go-expandenv v0.1.0
