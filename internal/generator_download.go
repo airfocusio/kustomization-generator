@@ -2,7 +2,7 @@ package internal
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -22,7 +22,7 @@ func (g DownloadGenerator) Generate() (*GeneratorResult, error) {
 		return nil, fmt.Errorf("failed to download %s: %v", g.Url, err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download %s: %v", g.Url, err)
 	}

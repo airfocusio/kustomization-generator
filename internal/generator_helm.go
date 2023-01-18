@@ -2,7 +2,7 @@ package internal
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -27,7 +27,7 @@ func (g HelmGenerator) Generate() (*GeneratorResult, error) {
 		return nil, err
 	}
 
-	valuesPath, err := ioutil.TempFile("", ".kustomization-generator-*-values.yaml")
+	valuesPath, err := os.CreateTemp("", ".kustomization-generator-*-values.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("writing temporary values file failed: %v", err)
 	}
@@ -92,7 +92,7 @@ func retrieveHelmChartUrl(registry string, chart string, version string) (*strin
 		return nil, fmt.Errorf("failed to fetch registry index at %s: %v", url, err)
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch registry index at %s: %v", url, err)
 	}

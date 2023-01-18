@@ -2,7 +2,7 @@ package internal
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -44,7 +44,7 @@ func (r KubernetesResource) NonEmpty() bool {
 }
 
 func LoadGenerator(file string) (*Generator, error) {
-	bytesRaw, err := ioutil.ReadFile(file)
+	bytesRaw, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

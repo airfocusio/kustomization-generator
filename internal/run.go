@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 )
@@ -31,7 +30,7 @@ func Run(dir string) error {
 }
 
 func clear(dir string) {
-	fds, err := ioutil.ReadDir(dir)
+	fds, err := os.ReadDir(dir)
 	if err != nil {
 		return
 	}
@@ -93,7 +92,7 @@ func write(dir string, result GeneratorResult) error {
 			if bucket.filter(resource) {
 				bucket.kustomization.Resources = append(bucket.kustomization.Resources, resource.File)
 				resourcePath := path.Join(bucket.dir, resource.File)
-				err := ioutil.WriteFile(resourcePath, []byte(resource.Content), 0o644)
+				err := os.WriteFile(resourcePath, []byte(resource.Content), 0o644)
 				if err != nil {
 					return fmt.Errorf("writing kustomization failed: %v", err)
 				}
