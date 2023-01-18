@@ -1,16 +1,5 @@
 .PHONY: *
 
-run: run-download run-helm run-kustomize
-
-run-download:
-	go run . --dir=example/download
-
-run-helm:
-	go run . --dir=example/helm
-
-run-kustomize:
-	go run . --dir=example/kustomize
-
 test:
 	go test -v ./...
 

@@ -103,12 +103,10 @@ func write(dir string, result GeneratorResult) error {
 	}
 
 	for _, bucket := range buckets {
-		if len(bucket.kustomization.Resources) > 0 {
-			kustomization.Resources = append(kustomization.Resources, bucket.name)
-			err := writeYamlFile(path.Join(bucket.dir, "kustomization.yaml"), bucket.kustomization)
-			if err != nil {
-				return fmt.Errorf("writing kustomization failed: %v", err)
-			}
+		kustomization.Resources = append(kustomization.Resources, bucket.name)
+		err := writeYamlFile(path.Join(bucket.dir, "kustomization.yaml"), bucket.kustomization)
+		if err != nil {
+			return fmt.Errorf("writing kustomization failed: %v", err)
 		}
 	}
 
