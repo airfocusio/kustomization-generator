@@ -26,6 +26,9 @@ func (g DownloadGenerator) Generate() (*GeneratorResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to download %s: %v", g.Url, err)
 	}
+	if !(resp.StatusCode >= 200 && resp.StatusCode < 300) {
+		return nil, fmt.Errorf("failed to download %s: status code was %d", g.Url, resp.StatusCode)
+	}
 
 	resources, err := splitCombinedKubernetesResources(string(body))
 	if err != nil {
