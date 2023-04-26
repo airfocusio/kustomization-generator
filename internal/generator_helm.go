@@ -12,13 +12,14 @@ import (
 )
 
 type HelmGenerator struct {
-	Registry  string                 `yaml:"registry"`
-	Chart     string                 `yaml:"chart"`
-	Version   string                 `yaml:"version"`
-	Name      string                 `yaml:"name"`
-	Namespace string                 `yaml:"namespace"`
-	Args      []string               `yaml:"args"`
-	Values    map[string]interface{} `yaml:"values"`
+	Registry    string                 `yaml:"registry"`
+	Chart       string                 `yaml:"chart"`
+	Version     string                 `yaml:"version"`
+	Name        string                 `yaml:"name"`
+	Namespace   string                 `yaml:"namespace"`
+	ApiVersions []string               `yaml:"apiVersions"`
+	Args        []string               `yaml:"args"`
+	Values      map[string]interface{} `yaml:"values"`
 }
 
 func (g HelmGenerator) Generate() (*GeneratorResult, error) {
@@ -51,6 +52,9 @@ func (g HelmGenerator) Generate() (*GeneratorResult, error) {
 		*url,
 		"--namespace", g.Namespace,
 		"--values", valuesPath.Name(),
+	}
+	if len(g.ApiVersions) > 0 {
+		helmArgs = append(helmArgs, "--api-versions", strings.Join(g.ApiVersions, ","))
 	}
 	helmArgs = append(helmArgs, g.Args...)
 	helmStdout, helmStderr, err := runCommand(*exec.Command(helmPath, helmArgs...))
