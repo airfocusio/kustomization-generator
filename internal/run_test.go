@@ -16,6 +16,11 @@ func TestRunHelm(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestRunHelmOci(t *testing.T) {
+	err := Run("../example/helm-oci")
+	assert.NoError(t, err)
+}
+
 func TestRunKustomize(t *testing.T) {
 	err := Run("../example/kustomize")
 	assert.NoError(t, err)

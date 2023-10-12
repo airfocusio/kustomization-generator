@@ -23,11 +23,6 @@ type HelmGenerator struct {
 }
 
 func (g HelmGenerator) Generate() (*GeneratorResult, error) {
-	url, err := retrieveHelmChartUrl(g.Registry, g.Chart, g.Version)
-	if err != nil {
-		return nil, err
-	}
-
 	valuesPath, err := os.CreateTemp("", ".kustomization-generator-*-values.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("writing temporary values file failed: %v", err)
@@ -49,10 +44,22 @@ func (g HelmGenerator) Generate() (*GeneratorResult, error) {
 	helmArgs := []string{
 		"template",
 		g.Name,
-		*url,
 		"--namespace", g.Namespace,
 		"--values", valuesPath.Name(),
 	}
+
+	if strings.HasPrefix(g.Registry, "oci://") {
+		helmArgs = append(helmArgs, g.Registry, "--version", g.Version)
+	} else if strings.HasPrefix(g.Registry, "https://") {
+		url, err := retrieveHelmChartArchiveUrl(g.Registry, g.Chart, g.Version)
+		if err != nil {
+			return nil, err
+		}
+		helmArgs = append(helmArgs, *url)
+	} else {
+		return nil, fmt.Errorf("unsupported registry %s", g.Registry)
+	}
+
 	if len(g.ApiVersions) > 0 {
 		helmArgs = append(helmArgs, "--api-versions", strings.Join(g.ApiVersions, ","))
 	}
@@ -83,7 +90,7 @@ type helmRegistryIndex struct {
 	} `yaml:"entries"`
 }
 
-func retrieveHelmChartUrl(registry string, chart string, version string) (*string, error) {
+func retrieveHelmChartArchiveUrl(registry string, chart string, version string) (*string, error) {
 	url := strings.TrimSuffix(registry, "/") + "/index.yaml"
 	req, err := http.NewRequest("GET", url, nil)
 	client := &http.Client{}
